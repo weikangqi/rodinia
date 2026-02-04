@@ -406,6 +406,73 @@ CXXFLAGS += -march=native
 
 ---
 
+## CUDA 编译与前置条件
+
+以下内容说明在 ARM64 平台上编译和运行 `cuda` 目录下基准（如 `bfs`、`kmeans` 等）所需的前置条件与常用构建命令。
+
+前置条件：
+- 已安装 CUDA Toolkit（包含 `nvcc`），并确认 `nvcc --version` 可用。
+- 系统开发工具与头文件：`build-essential`、`libc6-dev`（通常已安装）。
+- 若出现缺失 GL 相关头文件，请安装：`libglew-dev`、`freeglut3-dev`。
+- 确保 CUDA 库路径存在，例如 `/usr/local/cuda-<VER>/lib64`。
+
+示例（以 CUDA 11.4 安装路径为例）：
+
+```bash
+# 设置 CUDA_ROOT 与 nvcc 路径（根据系统实际安装位置调整）
+export CUDA_ROOT=/usr/local/cuda-11.4
+export PATH="$CUDA_ROOT/bin:$PATH"
+export LD_LIBRARY_PATH="$CUDA_ROOT/lib64:$LD_LIBRARY_PATH"
+
+# 安装常见依赖（按需）：
+sudo apt update
+sudo apt install -y build-essential libc6-dev libglew-dev freeglut3-dev
+```
+
+构建 `cuda` 下所有基准：
+
+```bash
+cd ~/rodinia/cuda
+# 指定 CUDA_ROOT、NVCC 与链接路径以避免系统默认路径问题
+make CUDA_ROOT=/usr/local/cuda-11.4 NVCC=/usr/local/cuda-11.4/bin/nvcc \
+         LDFLAGS='-L/usr/local/cuda-11.4/lib64' -j$(nproc)
+```
+
+单个基准构建示例（以 `bfs` 为例）：
+
+```bash
+cd ~/rodinia/cuda/bfs
+make CUDA_ROOT=/usr/local/cuda-11.4 NVCC=/usr/local/cuda-11.4/bin/nvcc
+```
+
+运行与数据文件：
+- 大多数 `cuda` 基准通过 `run` 脚本或可执行文件接收一个输入文件路径（参见 `cuda/bfs/run`）。
+- 例如 `bfs` 期望数据文件格式为：
+    1) `no_of_nodes`（整数）
+    2) 对每个节点：`start` `no_of_edges`（整数对）
+    3) `source`（起始节点索引）
+    4) `edge_list_size`（整数）
+    5) 接着 `edge_list_size` 对整数：`id cost`（程序只使用 `id`）
+
+运行示例：
+
+```bash
+# 解压数据（若为 .xz）
+xz -dk data/bfs/graph1M.txt.xz
+
+cd ~/rodinia/cuda/bfs
+./run            # 脚本会调用 ./bfs ../../data/bfs/graph1M.txt
+# 或直接： ./bfs ../../data/bfs/graph1M.txt
+```
+
+常见故障与修复：
+- 报错 `Error Reading graph file`：检查输入文件路径与格式，或先解压数据文件。
+- 报错找不到 `nvcc`：指定 `NVCC` 或把 CUDA bin 加入 `PATH`。
+- 链接错误 `cannot find -lcudart`：确保 LDFLAGS 包含 CUDA 库目录（`-L$CUDA_ROOT/lib64`）。
+
+将上述步骤加入文档后即能在 ARM64 平台上编译并运行 `cuda` 目录下的基准。
+
+
 ## 参考资源
 
 - [Rodinia 官方主页](http://lava.cs.virginia.edu/wiki/rodinia)
