@@ -31,7 +31,7 @@ using namespace std;
 // Program variables.
 int rows, cols;
 int Ne = rows * cols;
-int *data;
+int *path_data;
 int **wall;
 int *result;
 int pyramid_height;
@@ -45,11 +45,11 @@ void init(int argc, char **argv) {
         printf("Usage: dynproc row_len col_len pyramid_height\n");
         exit(1);
     }
-    data = new int[rows * cols];
+    path_data = new int[rows * cols];
     wall = new int *[rows];
     for (int n = 0; n < rows; n++) {
-        // wall[n] is set to be the nth row of the data array.
-        wall[n] = data + cols * n;
+        // wall[n] is set to be the nth row of the path_data array.
+        wall[n] = path_data + cols * n;
     }
     result = new int[cols];
 
@@ -106,13 +106,13 @@ int main(int argc, char **argv) {
     // Allocate device memory.
     cl_mem d_gpuWall =
         clCreateBuffer(cl.ctxt(), CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR,
-                       sizeof(cl_int) * (size - cols), (data + cols), NULL);
+                       sizeof(cl_int) * (size - cols), (path_data + cols), NULL);
 
     cl_mem d_gpuResult[2];
 
     d_gpuResult[0] =
         clCreateBuffer(cl.ctxt(), CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
-                       sizeof(cl_int) * cols, data, NULL);
+                       sizeof(cl_int) * cols, path_data, NULL);
 
     d_gpuResult[1] = clCreateBuffer(cl.ctxt(), CL_MEM_READ_WRITE,
                                     sizeof(cl_int) * cols, NULL, NULL);
@@ -185,9 +185,9 @@ int main(int argc, char **argv) {
     if (getenv("OUTPUT")) {
         FILE *file = fopen("output.txt", "a");
 
-        fprintf(file, "data:\n");
+        fprintf(file, "path_data:\n");
         for (int i = 0; i < cols; i++)
-            fprintf(file, "%d ", data[i]);
+            fprintf(file, "%d ", path_data[i]);
         fprintf(file, "\n");
 
         fprintf(file, "result:\n");
@@ -199,7 +199,7 @@ int main(int argc, char **argv) {
     }
 
     // Memory cleanup here.
-    delete[] data;
+    delete[] path_data;
     delete[] wall;
     delete[] result;
 

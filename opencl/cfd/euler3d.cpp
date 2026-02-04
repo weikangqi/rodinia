@@ -113,7 +113,7 @@ void dump(cl_mem variables, int nel, int nelr) {
 }
 
 void initialize_variables(int nelr, cl_mem variables,
-                          cl_mem ff_variable) throw(string) {
+                          cl_mem ff_variable) {
 
     int work_items = nelr;
     int work_group_size = BLOCK_SIZE_1;
