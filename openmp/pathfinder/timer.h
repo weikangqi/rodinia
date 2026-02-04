@@ -4,12 +4,21 @@
 
 
 /*----------- using cycle counter ------------*/
+#ifdef __aarch64__
+__inline__ uint64_t rdtsc() {
+    uint64_t val;
+    /* Use ARM performance counter */
+    __asm__ __volatile__("mrs %0, cntvct_el0" : "=r"(val));
+    return val;
+}
+#else
 __inline__ uint64_t rdtsc() {
     uint32_t lo, hi;
     /* We cannot use "=A", since this would use %rax on x86_64 */
     __asm__ __volatile__("rdtsc" : "=a"(lo), "=d"(hi));
     return (uint64_t)hi << 32 | lo;
 }
+#endif
 
 unsigned long long start_cycles;
 #define startCycle() (start_cycles = rdtsc())
