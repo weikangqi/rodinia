@@ -100,7 +100,7 @@ void init_mergesort(int listsize) {
     fclose(fp);
     mergeProgram =
         clCreateProgramWithSource(mergeContext, 1, (const char **)&source_str,
-                                  (const size_t)&source_size, &err);
+                                  (const size_t *)&source_size, &err);
     if (!mergeProgram) {
         printf("Error: Failed to create merge compute program!\n");
         exit(1);

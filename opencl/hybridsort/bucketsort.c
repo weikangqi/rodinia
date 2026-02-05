@@ -165,7 +165,7 @@ void init_bucketsort(int listsize) {
 
     bucketProgram =
         clCreateProgramWithSource(bucketContext, 1, (const char **)&source_str,
-                                  (const size_t)&source_size, &err);
+                                  (const size_t *)&source_size, &err);
     if (!bucketProgram) {
         printf("Error: Failed to create bucket compute program!\n");
         exit(1);
@@ -265,7 +265,7 @@ void histogramInit(int listsize) {
 
     histoProgram =
         clCreateProgramWithSource(histoContext, 1, (const char **)&source_str,
-                                  (const size_t)&source_size, &err);
+                                  (const size_t *)&source_size, &err);
     if (!histoProgram) {
         printf("Error: Failed to create compute program!\n");
         exit(1);
@@ -598,9 +598,6 @@ void bucketSort(float *d_input, float *d_output, int listsize, int *sizes,
         exit(1);
     }
 
-    size_t localfinal[] = {BUCKET_THREAD_N, 1, 1};
-    blocks = ((listsize - 1) / (BUCKET_THREAD_N * BUCKET_BAND)) + 1;
-    size_t globalfinal[] = {blocks * BUCKET_THREAD_N, 1, 1};
     err = 0;
     err = clSetKernelArg(bucketsortKernel, 0, sizeof(cl_mem), &d_input_buff);
     err = clSetKernelArg(bucketsortKernel, 1, sizeof(cl_mem),
@@ -614,6 +611,9 @@ void bucketSort(float *d_input, float *d_output, int listsize, int *sizes,
         printf("Error: Failed to set kernel arguments! %d\n", err);
         exit(1);
     }
+    size_t globalfinal[] = { (size_t)(blocks * BUCKET_THREAD_N), 1, 1 };
+    size_t localfinal[] = { (size_t)BUCKET_THREAD_N, 1, 1 };
+
     err = clEnqueueNDRangeKernel(bucketCommands, bucketsortKernel, 3, NULL,
                                  globalfinal, localfinal, 0, NULL,
                                  &bucketSortEvent);

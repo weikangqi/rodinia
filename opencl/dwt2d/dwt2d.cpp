@@ -212,7 +212,7 @@ int getImg(char *srcFilename, unsigned char *srcImg, int inputSize) {
     // read image
     int i = open(srcFilename, O_RDONLY, 0644);
     if (i == -1) {
-        error(0, errno, "cannot access %s", srcFilename);
+        fprintf(stderr, "cannot access %s: %s\n", srcFilename, strerror(errno));
         return -1;
     }
     int ret = read(i, srcImg, inputSize);
@@ -638,7 +638,8 @@ int writeLinear(cl_mem component, int pixWidth, int pixHeight,
     strcpy(outfile + strlen(filename), suffix);
     i = open(outfile, O_CREAT | O_WRONLY, 0644);
     if (i == -1) {
-        error(0, errno, "cannot access %s", outfile);
+        fprintf(stderr, "cannot access %s: %s\n", outfile, strerror(errno));
+        return -1;
         return -1;
     }
     printf("\nWriting to %s (%d x %d)\n", outfile, pixWidth, pixHeight);
@@ -769,7 +770,8 @@ int writeNStage2DDWT(cl_mem component, int pixWidth, int pixHeight, int stages,
     i = open(outfile, O_CREAT | O_WRONLY, 0644);
 
     if (i == -1) {
-        error(0, errno, "cannot access %s", outfile);
+        fprintf(stderr, "cannot access %s: %s\n", outfile, strerror(errno));
+        return -1;
         return -1;
     }
 
