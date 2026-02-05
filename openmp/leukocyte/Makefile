@@ -18,7 +18,13 @@ export
 
 MESCHACH_DIR = ../../common/meschach
 $(MESCHACH_DIR)/makefile:
-	cd $(MESCHACH_DIR); ./configure --with-all
+	@echo "Configuring meschach in $(MESCHACH_DIR)"
+	if [ -n "$(ANDROID_NDK_HOME)" ]; then \
+		 echo "Detected ANDROID_NDK_HOME, running cross-configure"; \
+		 cd $(MESCHACH_DIR); CC=$(CC) ./configure --host=aarch64-linux-android --with-all; \
+	else \
+		 cd $(MESCHACH_DIR); ./configure --with-all; \
+	fi
 $(MESCHACH_DIR)/libmeschach.a: $(MESCHACH_DIR)/makefile
 	$(MAKE) -C $(MESCHACH_DIR)
 CPPFLAGS += -I$(MESCHACH_DIR)

@@ -1,0 +1,29 @@
+# Android NDK arm64-v8a cross-build settings for OpenMP benchmarks
+NDK ?= $(ANDROID_NDK_HOME)
+SYSROOT := $(NDK)/toolchains/llvm/prebuilt/linux-x86_64/sysroot
+CROSS_PREFIX := aarch64-linux-android
+API_LEVEL := 21
+
+CC := $(NDK)/toolchains/llvm/prebuilt/linux-x86_64/bin/$(CROSS_PREFIX)$(API_LEVEL)-clang
+CXX := $(NDK)/toolchains/llvm/prebuilt/linux-x86_64/bin/$(CROSS_PREFIX)$(API_LEVEL)-clang++
+AR := $(NDK)/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar
+STRIP := $(NDK)/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip
+
+# basic flags
+CFLAGS += --sysroot=$(SYSROOT) -fPIE -pie -O2 -Wall -Wno-implicit-function-declaration -I$(SYSROOT)/usr/include
+CXXFLAGS += --sysroot=$(SYSROOT) -fPIE -pie -O2 -Wall -Wno-narrowing -I$(SYSROOT)/usr/include
+
+# OpenMP: use clang's OpenMP static runtime (libomp.a) and include clang's omp.h
+CFLAGS += -fopenmp -I$(NDK)/toolchains/llvm/prebuilt/linux-x86_64/lib/clang/21/include
+CXXFLAGS += -fopenmp -I$(NDK)/toolchains/llvm/prebuilt/linux-x86_64/lib/clang/21/include
+
+# Link libomp.a statically to avoid runtime library deployment
+LIBOMP_STATIC := $(NDK)/toolchains/llvm/prebuilt/linux-x86_64/lib/clang/21/lib/linux/aarch64/libomp.a
+ifneq (,$(wildcard $(LIBOMP_STATIC)))
+LDFLAGS += $(LIBOMP_STATIC)
+else
+$(warning libomp.a not found; OpenMP programs may fail to link/run)
+endif
+
+# C++ runtime (push libc++_shared.so to device when running)
+LDFLAGS += --sysroot=$(SYSROOT) -L$(SYSROOT)/usr/lib/$(CROSS_PREFIX)/$(API_LEVEL) -lc++_shared
